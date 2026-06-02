@@ -11,6 +11,7 @@ PORT="${PORT:-18080}"
 THREADS="${THREADS:-$(nproc)}"
 BATCH_THREADS="${BATCH_THREADS:-$THREADS}"
 CONTEXT="${CONTEXT:-4096}"
+PINNED_LLAMA_CPP_COMMIT="${PINNED_LLAMA_CPP_COMMIT:-60130d18f9ac7f42cb4d7f6060b088a45d8f242e}"
 
 usage() {
   cat <<'EOF'
@@ -27,6 +28,8 @@ Environment:
   PORT           Default 18080
   THREADS        Default nproc
   CONTEXT        Default 4096
+  PINNED_LLAMA_CPP_COMMIT
+                Recommended llama.cpp commit for packaged releases
 EOF
 }
 

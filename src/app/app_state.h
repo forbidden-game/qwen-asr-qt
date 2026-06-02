@@ -17,6 +17,14 @@ enum class BackendState {
     ModelMissing,
 };
 
+enum class BackendProcessState {
+    External,
+    Starting,
+    Running,
+    Stopped,
+    Error,
+};
+
 enum class SetupState {
     Unknown,
     MissingModel,
@@ -63,6 +71,23 @@ inline QString backendStateText(BackendState state)
         return QStringLiteral("Disconnected");
     case BackendState::ModelMissing:
         return QStringLiteral("ModelMissing");
+    }
+    return QStringLiteral("Unknown");
+}
+
+inline QString backendProcessStateText(BackendProcessState state)
+{
+    switch (state) {
+    case BackendProcessState::External:
+        return QStringLiteral("External");
+    case BackendProcessState::Starting:
+        return QStringLiteral("Starting");
+    case BackendProcessState::Running:
+        return QStringLiteral("Running");
+    case BackendProcessState::Stopped:
+        return QStringLiteral("Stopped");
+    case BackendProcessState::Error:
+        return QStringLiteral("Error");
     }
     return QStringLiteral("Unknown");
 }

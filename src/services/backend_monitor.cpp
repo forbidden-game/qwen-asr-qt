@@ -1,4 +1,5 @@
 #include "services/backend_monitor.h"
+#include "domain/backend_contract.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -35,7 +36,7 @@ void BackendMonitor::checkNow()
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         const QByteArray body = reply->readAll();
         const bool ok = reply->error() == QNetworkReply::NoError
-            && QJsonDocument::fromJson(body).object().value(QStringLiteral("status")).toString() == QStringLiteral("ok");
+            && QJsonDocument::fromJson(body).object().value(QStringLiteral("status")).toString() == BackendContract::expectedHealthStatus();
         reply->deleteLater();
         if (!ok) {
             checking_ = false;
@@ -83,7 +84,7 @@ void BackendMonitor::checkModels()
             }
             const QJsonArray capabilities = model.value(QStringLiteral("capabilities")).toArray();
             for (const QJsonValue &capability : capabilities) {
-                if (capability.toString() == QStringLiteral("multimodal")) {
+                if (capability.toString() == BackendContract::requiredModelCapability()) {
                     reply->deleteLater();
                     setState(BackendState::Connected);
                     return;

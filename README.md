@@ -18,13 +18,14 @@ Current behavior:
 - Qt tray app with global shortcut through KDE GlobalAccel.
 - Live recording overlay with microphone-volume waveform.
 - Local HTTP ASR request to llama.cpp `/v1/audio/transcriptions`.
+- Process boundary around llama.cpp: the Qt app does not link llama.cpp.
 - Transcript cleanup for hesitation fillers and punctuation artifacts.
 - Clipboard write through Qt Clipboard plus KDE Klipper DBus.
 - History persisted under the user's app data directory.
 
 Planned release behavior:
 
-- App starts and supervises `llama-server`.
+- App starts and supervises a bundled, pinned `llama-server`.
 - App downloads or imports Qwen3-ASR GGUF files on first run.
 - Status panel shows model download, backend startup, model loading, shortcut,
   microphone, and clipboard diagnostics.

@@ -18,6 +18,7 @@ public:
 
     void show();
     void updateState(AppState appState, BackendState backendState);
+    void updateBackendProcessState(BackendProcessState processState);
     void updateHistory(const QVector<HistoryItem> &items);
     void updateShortcut(const QKeySequence &shortcut);
     void notifyCopied(const QString &text);
@@ -47,11 +48,13 @@ private:
     QWidget *panel_ = nullptr;
     QLabel *appStateLabel_ = nullptr;
     QLabel *backendStateLabel_ = nullptr;
+    QLabel *backendProcessLabel_ = nullptr;
     QLabel *shortcutLabel_ = nullptr;
     QListWidget *historyList_ = nullptr;
 
     AppState appState_ = AppState::Idle;
     BackendState backendState_ = BackendState::Unknown;
+    BackendProcessState backendProcessState_ = BackendProcessState::External;
     QKeySequence shortcut_;
     QVector<HistoryItem> history_;
 };

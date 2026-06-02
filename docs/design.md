@@ -87,7 +87,11 @@ Meta+Space released
 
 ## Backend Contract
 
-The current app expects an already-running llama.cpp server:
+The app does not link `libllama`, `ggml`, or `mtmd`. It talks to a separate
+`llama-server` process over HTTP. This keeps llama.cpp crashes, upgrades, and
+ABI changes outside the Qt process.
+
+The backend contract is intentionally small:
 
 ```text
 POST /v1/audio/transcriptions
@@ -102,12 +106,24 @@ base URL: http://127.0.0.1:18080
 model:    qwen3-asr
 ```
 
+Pinned release metadata:
+
+```text
+llama.cpp repo:   ggml-org/llama.cpp
+llama.cpp commit: 60130d18f9ac7f42cb4d7f6060b088a45d8f242e
+local describe:   b9478
+```
+
+Developer mode keeps `backend/manageProcess=false`, so the app only monitors an
+already-running server. Release mode sets `backend/manageProcess=true` and
+starts a bundled, pinned `llama-server` executable with `QProcess`.
+
 ## Next Product Boundary
 
 The public "open and use" release should add:
 
-- `BackendManager`: start/stop bundled `llama-server`, pick a local port, stream
-  logs, and recover after crashes.
+- robust `BackendProcessManager` UI: logs, version display, and restart after
+  crashes.
 - `ModelManager`: detect, download, import, and validate GGUF files.
 - `SetupPanel`: show missing model, downloading, backend startup, model loading,
   ready, shortcut conflict, microphone error, and clipboard error states.

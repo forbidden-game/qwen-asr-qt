@@ -49,6 +49,12 @@ void TrayController::updateState(AppState appState, BackendState backendState)
     refreshPanel();
 }
 
+void TrayController::updateBackendProcessState(BackendProcessState processState)
+{
+    backendProcessState_ = processState;
+    refreshPanel();
+}
+
 void TrayController::updateHistory(const QVector<HistoryItem> &items)
 {
     history_ = items;
@@ -85,6 +91,7 @@ void TrayController::createPanel()
     auto *layout = new QVBoxLayout(panel_);
     appStateLabel_ = new QLabel(panel_);
     backendStateLabel_ = new QLabel(panel_);
+    backendProcessLabel_ = new QLabel(panel_);
     shortcutLabel_ = new QLabel(panel_);
     historyList_ = new QListWidget(panel_);
     historyList_->setSelectionMode(QAbstractItemView::NoSelection);
@@ -92,6 +99,7 @@ void TrayController::createPanel()
 
     layout->addWidget(appStateLabel_);
     layout->addWidget(backendStateLabel_);
+    layout->addWidget(backendProcessLabel_);
     layout->addWidget(shortcutLabel_);
     layout->addWidget(new QLabel(QStringLiteral("最近转写历史"), panel_));
     layout->addWidget(historyList_);
@@ -115,6 +123,7 @@ void TrayController::refreshPanel()
 
     appStateLabel_->setText(QStringLiteral("状态：%1").arg(appStateText(appState_)));
     backendStateLabel_->setText(QStringLiteral("后端：%1").arg(backendStateText(backendState_)));
+    backendProcessLabel_->setText(QStringLiteral("后端进程：%1").arg(backendProcessStateText(backendProcessState_)));
     shortcutLabel_->setText(QStringLiteral("快捷键：%1").arg(shortcut_.toString(QKeySequence::NativeText)));
 
     historyList_->clear();

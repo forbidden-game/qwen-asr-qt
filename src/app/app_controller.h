@@ -6,6 +6,7 @@
 #include "platform/global_shortcut.h"
 #include "services/asr_client.h"
 #include "services/backend_monitor.h"
+#include "services/backend_process_manager.h"
 #include "services/history_store.h"
 #include "services/wav_recorder.h"
 #include "ui/recording_overlay.h"
@@ -36,6 +37,7 @@ private:
     AppState appState_ = AppState::Idle;
     BackendState backendState_ = BackendState::Unknown;
     TrayController tray_;
+    BackendProcessManager backendProcess_;
     BackendMonitor backend_;
     WavRecorder recorder_;
     AsrClient asr_;

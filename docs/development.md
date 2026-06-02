@@ -27,6 +27,11 @@ Start llama.cpp:
 LLAMA_SERVER=/path/to/llama-server scripts/run-backend.sh
 ```
 
+The default app setting is developer mode: `backend/manageProcess=false`. In
+that mode the Qt app never starts llama.cpp; it only monitors and calls the HTTP
+server you started. Packaged releases can flip this setting and point
+`backend/llamaServerPath` at a bundled, pinned `llama-server`.
+
 Run the app:
 
 ```sh

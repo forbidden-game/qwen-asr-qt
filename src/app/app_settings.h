@@ -6,11 +6,15 @@
 
 struct ModelSpec {
     QString repo = QStringLiteral("ggml-org/Qwen3-ASR-0.6B-GGUF");
+    QString directory;
     QString modelFile = QStringLiteral("Qwen3-ASR-0.6B-Q8_0.gguf");
     QString mmprojFile = QStringLiteral("mmproj-Qwen3-ASR-0.6B-Q8_0.gguf");
     QString alias = QStringLiteral("qwen3-asr");
     QString sha256Model;
     QString sha256Mmproj;
+
+    QString modelPath() const;
+    QString mmprojPath() const;
 };
 
 struct BackendSpec {
@@ -20,6 +24,7 @@ struct BackendSpec {
     int threads = 12;
     int batchThreads = 16;
     int contextSize = 4096;
+    bool manageProcess = false;
 
     QUrl baseUrl() const;
     QUrl transcriptionEndpoint() const;

@@ -62,6 +62,8 @@ Model files should live outside the AppImage by default:
 
 - Qt and KDE Frameworks should be bundled or resolved by the packaging tool.
 - `llama-server` should be built as a CPU baseline binary first.
+- The bundled `llama-server` must be built from the pinned llama.cpp commit
+  recorded in `BackendContract`.
 - GPU-specific variants can be released later as separate artifacts.
 - KDE GlobalAccel and Klipper are desktop services; the app should detect when
   they are unavailable and show a clear status.
@@ -78,3 +80,19 @@ Next packaging work:
 3. Use linuxdeploy or appimagetool to create `AppDir`.
 4. Include license texts for bundled binaries.
 5. Run the release artifact on a clean KDE user profile.
+
+## Backend Compatibility Policy
+
+The release artifact owns the backend version. Users may point the app at an
+external `llama-server` for development, but the supported path is the bundled
+server built from the pinned llama.cpp commit.
+
+The app only relies on the documented HTTP contract:
+
+- `POST /v1/audio/transcriptions`
+- `GET /health`
+- `GET /v1/models`
+
+If llama.cpp changes behavior upstream, existing release artifacts are not
+affected because they keep their bundled server. Upgrading llama.cpp should be a
+deliberate release task with a contract smoke test.

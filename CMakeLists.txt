@@ -16,6 +16,8 @@ qt_add_executable(qwen-asr-qt
     src/app/app_settings.h
     src/app/app_state.h
     src/domain/asr_types.h
+    src/domain/backend_contract.cpp
+    src/domain/backend_contract.h
     src/domain/transcript_cleaner.cpp
     src/domain/transcript_cleaner.h
     src/main.cpp
@@ -27,6 +29,8 @@ qt_add_executable(qwen-asr-qt
     src/services/asr_client.h
     src/services/backend_monitor.cpp
     src/services/backend_monitor.h
+    src/services/backend_process_manager.cpp
+    src/services/backend_process_manager.h
     src/services/history_store.cpp
     src/services/history_store.h
     src/services/wav_recorder.cpp

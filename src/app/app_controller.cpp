@@ -15,6 +15,7 @@
 AppController::AppController(QObject *parent)
     : QObject(parent)
     , settings_(loadAppSettings())
+    , backendProcess_(settings_, this)
     , backend_(settings_, this)
     , asr_(settings_, this)
 {
@@ -27,6 +28,13 @@ AppController::AppController(QObject *parent)
         backendState_ = state;
         tray_.updateState(appState_, backendState_);
     });
+    connect(&backendProcess_, &BackendProcessManager::errorOccurred, this, [this](const QString &message) {
+        tray_.notifyError(message);
+    });
+    connect(&backendProcess_, &BackendProcessManager::stateChanged, this, [this](BackendProcessState state) {
+        tray_.updateBackendProcessState(state);
+    });
+    connect(qApp, &QApplication::aboutToQuit, &backendProcess_, &BackendProcessManager::stop);
     connect(&recorder_, &WavRecorder::errorOccurred, this, [this](const QString &message) {
         setState(AppState::Error);
         tray_.notifyError(message);
@@ -60,7 +68,9 @@ void AppController::start()
     tray_.updateShortcut(shortcut_.shortcut().isEmpty() ? settings_.shortcut : shortcut_.shortcut());
     tray_.updateHistory(history_.recent());
     tray_.updateState(appState_, backendState_);
+    tray_.updateBackendProcessState(backendProcess_.state());
     tray_.show();
+    backendProcess_.start();
     backend_.start();
 }
 
