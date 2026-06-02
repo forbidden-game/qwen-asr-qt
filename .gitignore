@@ -1,0 +1,3 @@
+build/
+test_16k_mono.wav
+transcription_*.json
