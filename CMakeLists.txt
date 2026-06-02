@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Network DBus)
 find_package(KF6GlobalAccel REQUIRED)
 
 qt_add_executable(qwen-asr-qt
@@ -16,6 +16,8 @@ qt_add_executable(qwen-asr-qt
     src/asr_client.h
     src/backend_monitor.cpp
     src/backend_monitor.h
+    src/clipboard_writer.cpp
+    src/clipboard_writer.h
     src/global_shortcut.cpp
     src/global_shortcut.h
     src/history_store.cpp
@@ -36,5 +38,6 @@ target_link_libraries(qwen-asr-qt PRIVATE
     Qt6::Widgets
     Qt6::Multimedia
     Qt6::Network
+    Qt6::DBus
     KF6::GlobalAccel
 )

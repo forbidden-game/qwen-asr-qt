@@ -1,13 +1,11 @@
 #include "app_controller.h"
 
 #include <QApplication>
-#include <QClipboard>
 #include <QDateTime>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
-#include <QGuiApplication>
 #include <QKeySequenceEdit>
 #include <QLabel>
 #include <QMessageBox>
@@ -35,10 +33,13 @@ AppController::AppController(QObject *parent)
     });
     connect(&recorder_, &WavRecorder::levelChanged, &overlay_, &RecordingOverlay::setInputLevel);
     connect(&asr_, &AsrClient::finished, this, [this](const HistoryItem &item) {
-        QGuiApplication::clipboard()->setText(item.text);
         history_.add(item);
         setState(AppState::Done);
-        tray_.notifyCopied(item.text);
+        if (clipboard_.setText(item.text)) {
+            tray_.notifyCopied(item.text);
+        } else {
+            tray_.notifyError(QStringLiteral("转写完成，但写入剪贴板失败"));
+        }
     });
     connect(&asr_, &AsrClient::errorOccurred, this, [this](const QString &message) {
         setState(AppState::Error);

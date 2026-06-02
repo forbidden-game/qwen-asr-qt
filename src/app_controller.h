@@ -2,6 +2,7 @@
 
 #include "asr_client.h"
 #include "backend_monitor.h"
+#include "clipboard_writer.h"
 #include "global_shortcut.h"
 #include "history_store.h"
 #include "recording_overlay.h"
@@ -39,6 +40,7 @@ private:
     BackendMonitor backend_;
     WavRecorder recorder_;
     AsrClient asr_;
+    ClipboardWriter clipboard_;
     GlobalShortcut shortcut_;
     HistoryStore history_;
     RecordingOverlay overlay_;
