@@ -1,0 +1,18 @@
+Qwen ASR Qt
+============
+
+This repository contains the Qt tray application source code. Model weights and
+llama.cpp binaries are not committed to this repository.
+
+Third-party components used or expected at runtime:
+
+- llama.cpp: MIT License, https://github.com/ggml-org/llama.cpp
+- Qwen3-ASR-0.6B and GGUF conversion: Apache-2.0 model family,
+  https://huggingface.co/Qwen/Qwen3-ASR-0.6B and
+  https://huggingface.co/ggml-org/Qwen3-ASR-0.6B-GGUF
+- Qt: available under LGPL/commercial licensing, https://www.qt.io/
+- KDE Frameworks GlobalAccel: KDE Frameworks licensing applies,
+  https://invent.kde.org/frameworks/kglobalaccel
+
+If a release artifact bundles llama.cpp or other third-party binaries, the
+release must include the corresponding license texts and notices.

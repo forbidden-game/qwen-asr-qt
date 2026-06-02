@@ -1,3 +1,10 @@
 build/
+dist/
+models/
+third_party/llama.cpp/
+*.AppImage
+*.gguf
+*.m4a
+*.wav
 test_16k_mono.wav
 transcription_*.json

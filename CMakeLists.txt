@@ -41,3 +41,5 @@ target_link_libraries(qwen-asr-qt PRIVATE
     Qt6::DBus
     KF6::GlobalAccel
 )
+
+install(TARGETS qwen-asr-qt RUNTIME DESTINATION bin)
