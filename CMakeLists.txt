@@ -25,6 +25,8 @@ qt_add_executable(qwen-asr-qt
     src/recording_overlay.h
     src/tray_controller.cpp
     src/tray_controller.h
+    src/transcript_cleaner.cpp
+    src/transcript_cleaner.h
     src/types.h
     src/wav_recorder.cpp
     src/wav_recorder.h

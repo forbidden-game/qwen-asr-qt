@@ -3,7 +3,103 @@
 #include <QAudioDevice>
 #include <QDataStream>
 #include <QDir>
+#include <QMetaObject>
 #include <QMediaDevices>
+#include <QPointer>
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <functional>
+
+namespace {
+
+double sampleValue(const char *data, qsizetype index, QAudioFormat::SampleFormat sampleFormat)
+{
+    switch (sampleFormat) {
+    case QAudioFormat::UInt8:
+        return (static_cast<unsigned char>(data[index]) - 128) / 128.0;
+    case QAudioFormat::Int16: {
+        qint16 sample = 0;
+        std::memcpy(&sample, data + index * 2, sizeof(sample));
+        return sample / 32768.0;
+    }
+    case QAudioFormat::Int32: {
+        qint32 sample = 0;
+        std::memcpy(&sample, data + index * 4, sizeof(sample));
+        return sample / 2147483648.0;
+    }
+    case QAudioFormat::Float: {
+        float sample = 0.0F;
+        std::memcpy(&sample, data + index * 4, sizeof(sample));
+        return std::clamp(static_cast<double>(sample), -1.0, 1.0);
+    }
+    case QAudioFormat::Unknown:
+        return 0.0;
+    }
+    return 0.0;
+}
+
+qreal audioLevel(const char *data, qint64 len, const QAudioFormat &format)
+{
+    const int bytesPerSample = std::max(1, format.bytesPerSample());
+    const qint64 sampleCount = len / bytesPerSample;
+    if (sampleCount <= 0) {
+        return 0.0;
+    }
+
+    double sumSquares = 0.0;
+    for (qint64 i = 0; i < sampleCount; ++i) {
+        const double value = sampleValue(data, i, format.sampleFormat());
+        sumSquares += value * value;
+    }
+
+    const double rms = std::sqrt(sumSquares / static_cast<double>(sampleCount));
+    const double perceptual = std::sqrt(std::clamp(rms, 0.0, 1.0)) * 1.7;
+    return qBound<qreal>(0.0, perceptual, 1.0);
+}
+
+class LevelCaptureDevice : public QIODevice {
+public:
+    LevelCaptureDevice(QFile *file, QAudioFormat format, std::function<void(qreal)> levelCallback, QObject *parent = nullptr)
+        : QIODevice(parent)
+        , file_(file)
+        , format_(std::move(format))
+        , levelCallback_(std::move(levelCallback))
+    {
+        levelTimer_.start();
+    }
+
+protected:
+    qint64 readData(char *data, qint64 maxSize) override
+    {
+        Q_UNUSED(data);
+        Q_UNUSED(maxSize);
+        return 0;
+    }
+
+    qint64 writeData(const char *data, qint64 len) override
+    {
+        if (!file_) {
+            return -1;
+        }
+
+        const qint64 written = file_->write(data, len);
+        if (written > 0 && levelTimer_.elapsed() >= 30) {
+            levelCallback_(audioLevel(data, written, format_));
+            levelTimer_.restart();
+        }
+        return written;
+    }
+
+private:
+    QFile *file_;
+    QAudioFormat format_;
+    std::function<void(qreal)> levelCallback_;
+    QElapsedTimer levelTimer_;
+};
+
+} // namespace
 
 WavRecorder::WavRecorder(QObject *parent)
     : QObject(parent)
@@ -50,7 +146,19 @@ bool WavRecorder::start(const QString &wavPath, int sampleRate, int channels)
             emit errorOccurred(QStringLiteral("录音失败：%1").arg(static_cast<int>(source_->error())));
         }
     });
-    source_->start(&file_);
+    QPointer<WavRecorder> recorder(this);
+    captureDevice_ = new LevelCaptureDevice(&file_, format_, [recorder](qreal level) {
+        if (!recorder) {
+            return;
+        }
+        QMetaObject::invokeMethod(recorder, [recorder, level]() {
+            if (recorder) {
+                emit recorder->levelChanged(level);
+            }
+        }, Qt::QueuedConnection);
+    }, this);
+    captureDevice_->open(QIODevice::WriteOnly);
+    source_->start(captureDevice_);
     return true;
 }
 
@@ -63,6 +171,12 @@ QString WavRecorder::stop()
     source_->stop();
     source_->deleteLater();
     source_ = nullptr;
+    if (captureDevice_) {
+        captureDevice_->close();
+        delete captureDevice_;
+        captureDevice_ = nullptr;
+    }
+    emit levelChanged(0.0);
 
     const quint32 dataBytes = static_cast<quint32>(qMax<qint64>(0, file_.size() - 44));
     file_.seek(0);

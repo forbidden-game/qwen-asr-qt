@@ -26,4 +26,4 @@ cmake --build build -j
 ./build/qwen-asr-qt
 ```
 
-Default global shortcut: `Meta+Space`. Hold it to record, release it to transcribe and copy. A small KDE-style recording overlay appears on the screen under the cursor while recording.
+Default global shortcut: `Meta+Space`. Hold it to record, release it to transcribe and copy. A small KDE-style recording overlay appears on the screen under the cursor while recording, and its waveform reacts to live microphone volume.

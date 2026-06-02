@@ -20,9 +20,6 @@ signals:
     void errorOccurred(const QString &message);
 
 private:
-    QString cleanTranscript(const QString &raw) const;
-    QString removeFillers(const QString &text) const;
-
     AsrConfig config_;
     QNetworkAccessManager network_;
 };

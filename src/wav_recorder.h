@@ -4,6 +4,7 @@
 #include <QAudioSource>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QIODevice>
 #include <QObject>
 #include <QString>
 
@@ -19,6 +20,7 @@ public:
 
 signals:
     void errorOccurred(const QString &message);
+    void levelChanged(qreal level);
 
 private:
     bool writeHeader(quint32 dataBytes);
@@ -28,5 +30,6 @@ private:
     QFile file_;
     QAudioFormat format_;
     QAudioSource *source_ = nullptr;
+    QIODevice *captureDevice_ = nullptr;
     QString wavPath_;
 };

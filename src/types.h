@@ -26,7 +26,7 @@ struct AsrConfig {
     QUrl modelsUrl = QUrl(QStringLiteral("http://127.0.0.1:18080/v1/models"));
     QString model = QStringLiteral("qwen3-asr");
     QString language = QStringLiteral("Chinese");
-    QString prompt = QStringLiteral("Transcribe audio to text. Remove hesitation filler words such as 嗯, 呃, 额, 啊, uh, um when they are not meaningful content.");
+    QString prompt = QStringLiteral("Transcribe the audio as clean Chinese text. Do not output hesitation fillers or pause tokens such as 嗯, 嗯嗯, 呃, 额, 唔, uh, um, er, unless the speaker explicitly quotes or discusses the filler word. Keep punctuation natural.");
     QKeySequence shortcut = QKeySequence(QStringLiteral("Meta+Space"));
     int sampleRate = 16000;
     int channels = 1;

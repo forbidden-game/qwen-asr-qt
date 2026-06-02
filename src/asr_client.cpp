@@ -1,11 +1,11 @@
 #include "asr_client.h"
+#include "transcript_cleaner.h"
 
 #include <QFile>
 #include <QHttpMultiPart>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkReply>
-#include <QRegularExpression>
 
 AsrClient::AsrClient(AsrConfig config, QObject *parent)
     : QObject(parent)
@@ -84,7 +84,7 @@ void AsrClient::transcribe(const QString &wavPath)
         HistoryItem item;
         item.createdAt = QDateTime::currentDateTime();
         item.rawText = raw;
-        item.text = cleanTranscript(raw);
+        item.text = TranscriptCleaner::clean(raw);
         if (item.text.isEmpty()) {
             emit errorOccurred(QStringLiteral("ASR 返回无有效文本"));
             reply->deleteLater();
@@ -94,42 +94,4 @@ void AsrClient::transcribe(const QString &wavPath)
         emit finished(item);
         reply->deleteLater();
     });
-}
-
-QString AsrClient::cleanTranscript(const QString &raw) const
-{
-    const QString marker = QStringLiteral("<asr_text>");
-    const int idx = raw.indexOf(marker);
-    if (idx >= 0) {
-        return removeFillers(raw.mid(idx + marker.size()).trimmed());
-    }
-
-    const QString text = raw.trimmed();
-    if (text.startsWith(QStringLiteral("Transcribe audio to text"), Qt::CaseInsensitive)) {
-        return {};
-    }
-    return removeFillers(text);
-}
-
-QString AsrClient::removeFillers(const QString &text) const
-{
-    QString cleaned = text.simplified();
-
-    const QList<QRegularExpression> patterns = {
-        QRegularExpression(QStringLiteral(R"((^|[\s,，。！？；：、])([嗯呃额唔]+|啊{1,}|呐{1,}|uh+|um+|er+)(?=($|[\s,，。！？；：、])))"), QRegularExpression::CaseInsensitiveOption),
-        QRegularExpression(QStringLiteral(R"((^|[\s,，。！？；：、])([嗯呃额唔啊呐]+)[,，、\s]*)"), QRegularExpression::CaseInsensitiveOption),
-    };
-
-    for (const QRegularExpression &pattern : patterns) {
-        QRegularExpressionMatch match;
-        while ((match = pattern.match(cleaned)).hasMatch()) {
-            cleaned.replace(match.capturedStart(), match.capturedLength(), match.captured(1));
-        }
-    }
-
-    cleaned.replace(QRegularExpression(QStringLiteral(R"(^[\s,，、]+)")), QString());
-    cleaned.replace(QRegularExpression(QStringLiteral(R"([\s,，、]+$)")), QString());
-    cleaned.replace(QRegularExpression(QStringLiteral(R"([,，、]\s*([。！？；：]))")), QStringLiteral("\\1"));
-    cleaned.replace(QRegularExpression(QStringLiteral(R"(\s+([，。！？；：、]))")), QStringLiteral("\\1"));
-    return cleaned.trimmed();
 }

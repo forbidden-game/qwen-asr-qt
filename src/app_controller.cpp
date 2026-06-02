@@ -33,6 +33,7 @@ AppController::AppController(QObject *parent)
         setState(AppState::Error);
         tray_.notifyError(message);
     });
+    connect(&recorder_, &WavRecorder::levelChanged, &overlay_, &RecordingOverlay::setInputLevel);
     connect(&asr_, &AsrClient::finished, this, [this](const HistoryItem &item) {
         QGuiApplication::clipboard()->setText(item.text);
         history_.add(item);

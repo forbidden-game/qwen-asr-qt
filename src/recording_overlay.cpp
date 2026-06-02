@@ -16,15 +16,19 @@ RecordingOverlay::RecordingOverlay(QWidget *parent)
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_TransparentForMouseEvents);
     setFixedSize(300, 86);
+    levels_.fill(0.0, 13);
 
     timer_.setInterval(33);
-    connect(&timer_, &QTimer::timeout, this, QOverload<>::of(&RecordingOverlay::update));
+    connect(&timer_, &QTimer::timeout, this, &RecordingOverlay::tick);
 }
 
 void RecordingOverlay::showRecording()
 {
     positionOnActiveScreen();
     clock_.restart();
+    targetLevel_ = 0.0;
+    displayLevel_ = 0.0;
+    levels_.fill(0.0, levels_.size());
     timer_.start();
     show();
     raise();
@@ -34,6 +38,11 @@ void RecordingOverlay::hideRecording()
 {
     timer_.stop();
     hide();
+}
+
+void RecordingOverlay::setInputLevel(qreal level)
+{
+    targetLevel_ = qBound<qreal>(0.0, level, 1.0);
 }
 
 void RecordingOverlay::paintEvent(QPaintEvent *event)
@@ -57,12 +66,12 @@ void RecordingOverlay::paintEvent(QPaintEvent *event)
 
     const QColor accent(61, 174, 233);
     const QPointF center(48, 43);
-    const qreal pulse = (std::sin(t * 5.2) + 1.0) / 2.0;
+    const qreal pulse = qBound<qreal>(0.0, displayLevel_ + 0.08 * ((std::sin(t * 5.2) + 1.0) / 2.0), 1.0);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 36 + int(45 * pulse)));
-    painter.drawEllipse(center, 18 + 6 * pulse, 18 + 6 * pulse);
+    painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 30 + int(72 * pulse)));
+    painter.drawEllipse(center, 16 + 12 * pulse, 16 + 12 * pulse);
     painter.setBrush(accent);
-    painter.drawEllipse(center, 9, 9);
+    painter.drawEllipse(center, 8 + 3 * pulse, 8 + 3 * pulse);
     painter.setBrush(QColor(255, 255, 255, 210));
     painter.drawEllipse(center, 3.5, 3.5);
 
@@ -80,14 +89,27 @@ void RecordingOverlay::paintEvent(QPaintEvent *event)
     painter.drawText(QRectF(76, 48, 130, 20), Qt::AlignLeft | Qt::AlignVCenter, QStringLiteral("松开后转写"));
 
     painter.setPen(Qt::NoPen);
-    for (int i = 0; i < 7; ++i) {
-        const qreal phase = t * 6.5 + i * 0.82;
-        const qreal level = (std::sin(phase) + 1.0) / 2.0;
-        const qreal h = 10 + level * 28;
-        QRectF bar(204 + i * 10, 43 - h / 2, 5, h);
-        painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 120 + int(level * 90)));
-        painter.drawRoundedRect(bar, 2.5, 2.5);
+    const int barCount = levels_.size();
+    const qreal startX = 186;
+    for (int i = 0; i < barCount; ++i) {
+        const qreal shimmer = 0.035 * ((std::sin(t * 3.2 + i * 0.73) + 1.0) / 2.0);
+        const qreal level = qBound<qreal>(0.0, levels_.at(i) + shimmer, 1.0);
+        const qreal h = 6 + level * 40;
+        QRectF bar(startX + i * 6.2, 43 - h / 2, 3.8, h);
+        painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 88 + int(level * 132)));
+        painter.drawRoundedRect(bar, 1.9, 1.9);
     }
+}
+
+void RecordingOverlay::tick()
+{
+    displayLevel_ = displayLevel_ * 0.70 + targetLevel_ * 0.30;
+    targetLevel_ *= 0.90;
+    if (!levels_.isEmpty()) {
+        levels_.pop_front();
+        levels_.push_back(displayLevel_);
+    }
+    update();
 }
 
 void RecordingOverlay::positionOnActiveScreen()
