@@ -1,6 +1,7 @@
 #pragma once
 
-#include "types.h"
+#include "app/app_state.h"
+#include "domain/asr_types.h"
 
 #include <QLabel>
 #include <QListWidget>

@@ -1,0 +1,68 @@
+#include "app/app_settings.h"
+
+#include <QSettings>
+
+namespace {
+
+QUrl withPath(const BackendSpec &backend, const QString &path)
+{
+    QUrl url;
+    url.setScheme(QStringLiteral("http"));
+    url.setHost(backend.host);
+    url.setPort(backend.port);
+    url.setPath(path);
+    return url;
+}
+
+} // namespace
+
+QUrl BackendSpec::baseUrl() const
+{
+    return withPath(*this, QStringLiteral("/"));
+}
+
+QUrl BackendSpec::transcriptionEndpoint() const
+{
+    return withPath(*this, QStringLiteral("/v1/audio/transcriptions"));
+}
+
+QUrl BackendSpec::healthUrl() const
+{
+    return withPath(*this, QStringLiteral("/health"));
+}
+
+QUrl BackendSpec::modelsUrl() const
+{
+    return withPath(*this, QStringLiteral("/v1/models"));
+}
+
+AppSettings loadAppSettings()
+{
+    QSettings settings;
+    AppSettings config;
+
+    config.backend.host = settings.value(QStringLiteral("backend/host"), config.backend.host).toString();
+    config.backend.port = settings.value(QStringLiteral("backend/port"), config.backend.port).toInt();
+    config.backend.llamaServerPath = settings.value(QStringLiteral("backend/llamaServerPath"), config.backend.llamaServerPath).toString();
+    config.backend.threads = settings.value(QStringLiteral("backend/threads"), config.backend.threads).toInt();
+    config.backend.batchThreads = settings.value(QStringLiteral("backend/batchThreads"), config.backend.batchThreads).toInt();
+    config.backend.contextSize = settings.value(QStringLiteral("backend/contextSize"), config.backend.contextSize).toInt();
+
+    config.model.repo = settings.value(QStringLiteral("model/repo"), config.model.repo).toString();
+    config.model.modelFile = settings.value(QStringLiteral("model/modelFile"), config.model.modelFile).toString();
+    config.model.mmprojFile = settings.value(QStringLiteral("model/mmprojFile"), config.model.mmprojFile).toString();
+    config.model.alias = settings.value(QStringLiteral("model/alias"), config.model.alias).toString();
+
+    config.transcript.language = settings.value(QStringLiteral("transcript/language"), config.transcript.language).toString();
+    config.transcript.prompt = settings.value(QStringLiteral("transcript/prompt"), config.transcript.prompt).toString();
+    config.audio.sampleRate = settings.value(QStringLiteral("audio/sampleRate"), config.audio.sampleRate).toInt();
+    config.audio.channels = settings.value(QStringLiteral("audio/channels"), config.audio.channels).toInt();
+    config.shortcut = QKeySequence(settings.value(QStringLiteral("shortcut"), config.shortcut.toString()).toString());
+    return config;
+}
+
+void saveShortcutSetting(const QKeySequence &shortcut)
+{
+    QSettings settings;
+    settings.setValue(QStringLiteral("shortcut"), shortcut.toString());
+}

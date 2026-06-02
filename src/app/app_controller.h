@@ -1,16 +1,17 @@
 #pragma once
 
-#include "asr_client.h"
-#include "backend_monitor.h"
-#include "clipboard_writer.h"
-#include "global_shortcut.h"
-#include "history_store.h"
-#include "recording_overlay.h"
-#include "tray_controller.h"
-#include "wav_recorder.h"
+#include "app/app_settings.h"
+#include "app/app_state.h"
+#include "platform/clipboard_writer.h"
+#include "platform/global_shortcut.h"
+#include "services/asr_client.h"
+#include "services/backend_monitor.h"
+#include "services/history_store.h"
+#include "services/wav_recorder.h"
+#include "ui/recording_overlay.h"
+#include "ui/tray_controller.h"
 
 #include <QElapsedTimer>
-#include <QSettings>
 
 class AppController : public QObject {
     Q_OBJECT
@@ -30,10 +31,8 @@ private:
     void stopRecording(bool allowDiscard);
     void editShortcut();
     QString nextWavPath() const;
-    AsrConfig loadConfig() const;
-    void saveShortcut(const QKeySequence &shortcut);
 
-    AsrConfig config_;
+    AppSettings settings_;
     AppState appState_ = AppState::Idle;
     BackendState backendState_ = BackendState::Unknown;
     TrayController tray_;

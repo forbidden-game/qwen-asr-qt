@@ -1,4 +1,4 @@
-#include "recording_overlay.h"
+#include "ui/recording_overlay.h"
 
 #include <QCursor>
 #include <QGuiApplication>

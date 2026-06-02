@@ -1,4 +1,4 @@
-#include "backend_monitor.h"
+#include "services/backend_monitor.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -6,17 +6,17 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 
-BackendMonitor::BackendMonitor(AsrConfig config, QObject *parent)
+BackendMonitor::BackendMonitor(AppSettings settings, QObject *parent)
     : QObject(parent)
-    , config_(std::move(config))
+    , settings_(std::move(settings))
 {
     timer_.setInterval(5000);
     connect(&timer_, &QTimer::timeout, this, &BackendMonitor::checkNow);
 }
 
-void BackendMonitor::setConfig(const AsrConfig &config)
+void BackendMonitor::setSettings(const AppSettings &settings)
 {
-    config_ = config;
+    settings_ = settings;
 }
 
 void BackendMonitor::start()
@@ -31,7 +31,7 @@ void BackendMonitor::checkNow()
         return;
     }
     checking_ = true;
-    QNetworkReply *reply = network_.get(QNetworkRequest(config_.healthUrl));
+    QNetworkReply *reply = network_.get(QNetworkRequest(settings_.backend.healthUrl()));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         const QByteArray body = reply->readAll();
         const bool ok = reply->error() == QNetworkReply::NoError
@@ -62,7 +62,7 @@ void BackendMonitor::setState(BackendState state)
 
 void BackendMonitor::checkModels()
 {
-    QNetworkReply *reply = network_.get(QNetworkRequest(config_.modelsUrl));
+    QNetworkReply *reply = network_.get(QNetworkRequest(settings_.backend.modelsUrl()));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         const QByteArray body = reply->readAll();
         checking_ = false;
@@ -78,7 +78,7 @@ void BackendMonitor::checkModels()
         for (const QJsonValue &value : models) {
             const QJsonObject model = value.toObject();
             const QString name = model.value(QStringLiteral("name")).toString();
-            if (name != config_.model) {
+            if (name != settings_.model.alias) {
                 continue;
             }
             const QJsonArray capabilities = model.value(QStringLiteral("capabilities")).toArray();

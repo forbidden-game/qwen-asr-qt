@@ -1,4 +1,4 @@
-#include "tray_controller.h"
+#include "ui/tray_controller.h"
 
 #include <QApplication>
 #include <QCursor>

@@ -1,4 +1,4 @@
-#include "global_shortcut.h"
+#include "platform/global_shortcut.h"
 
 #include <KGlobalAccel>
 

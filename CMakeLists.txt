@@ -10,29 +10,34 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Network DBus)
 find_package(KF6GlobalAccel REQUIRED)
 
 qt_add_executable(qwen-asr-qt
-    src/app_controller.cpp
-    src/app_controller.h
-    src/asr_client.cpp
-    src/asr_client.h
-    src/backend_monitor.cpp
-    src/backend_monitor.h
-    src/clipboard_writer.cpp
-    src/clipboard_writer.h
-    src/global_shortcut.cpp
-    src/global_shortcut.h
-    src/history_store.cpp
-    src/history_store.h
+    src/app/app_controller.cpp
+    src/app/app_controller.h
+    src/app/app_settings.cpp
+    src/app/app_settings.h
+    src/app/app_state.h
+    src/domain/asr_types.h
+    src/domain/transcript_cleaner.cpp
+    src/domain/transcript_cleaner.h
     src/main.cpp
-    src/recording_overlay.cpp
-    src/recording_overlay.h
-    src/tray_controller.cpp
-    src/tray_controller.h
-    src/transcript_cleaner.cpp
-    src/transcript_cleaner.h
-    src/types.h
-    src/wav_recorder.cpp
-    src/wav_recorder.h
+    src/platform/clipboard_writer.cpp
+    src/platform/clipboard_writer.h
+    src/platform/global_shortcut.cpp
+    src/platform/global_shortcut.h
+    src/services/asr_client.cpp
+    src/services/asr_client.h
+    src/services/backend_monitor.cpp
+    src/services/backend_monitor.h
+    src/services/history_store.cpp
+    src/services/history_store.h
+    src/services/wav_recorder.cpp
+    src/services/wav_recorder.h
+    src/ui/recording_overlay.cpp
+    src/ui/recording_overlay.h
+    src/ui/tray_controller.cpp
+    src/ui/tray_controller.h
 )
+
+target_include_directories(qwen-asr-qt PRIVATE src)
 
 target_link_libraries(qwen-asr-qt PRIVATE
     Qt6::Widgets

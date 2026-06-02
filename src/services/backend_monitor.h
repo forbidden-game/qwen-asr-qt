@@ -1,6 +1,7 @@
 #pragma once
 
-#include "types.h"
+#include "app/app_settings.h"
+#include "app/app_state.h"
 
 #include <QNetworkAccessManager>
 #include <QObject>
@@ -10,9 +11,9 @@ class BackendMonitor : public QObject {
     Q_OBJECT
 
 public:
-    explicit BackendMonitor(AsrConfig config, QObject *parent = nullptr);
+    explicit BackendMonitor(AppSettings settings, QObject *parent = nullptr);
 
-    void setConfig(const AsrConfig &config);
+    void setSettings(const AppSettings &settings);
     void start();
     void checkNow();
     BackendState state() const;
@@ -24,7 +25,7 @@ private:
     void setState(BackendState state);
     void checkModels();
 
-    AsrConfig config_;
+    AppSettings settings_;
     QNetworkAccessManager network_;
     QTimer timer_;
     BackendState state_ = BackendState::Unknown;

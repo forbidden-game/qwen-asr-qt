@@ -1,6 +1,7 @@
 #pragma once
 
-#include "types.h"
+#include "app/app_settings.h"
+#include "domain/asr_types.h"
 
 #include <QElapsedTimer>
 #include <QNetworkAccessManager>
@@ -10,9 +11,9 @@ class AsrClient : public QObject {
     Q_OBJECT
 
 public:
-    explicit AsrClient(AsrConfig config, QObject *parent = nullptr);
+    explicit AsrClient(AppSettings settings, QObject *parent = nullptr);
 
-    void setConfig(const AsrConfig &config);
+    void setSettings(const AppSettings &settings);
     void transcribe(const QString &wavPath);
 
 signals:
@@ -20,6 +21,6 @@ signals:
     void errorOccurred(const QString &message);
 
 private:
-    AsrConfig config_;
+    AppSettings settings_;
     QNetworkAccessManager network_;
 };

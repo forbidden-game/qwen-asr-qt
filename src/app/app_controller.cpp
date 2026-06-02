@@ -1,4 +1,4 @@
-#include "app_controller.h"
+#include "app/app_controller.h"
 
 #include <QApplication>
 #include <QDateTime>
@@ -14,9 +14,9 @@
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
-    , config_(loadConfig())
-    , backend_(config_, this)
-    , asr_(config_, this)
+    , settings_(loadAppSettings())
+    , backend_(settings_, this)
+    , asr_(settings_, this)
 {
     connect(&tray_, &TrayController::toggleRecordingRequested, this, &AppController::toggleRecording);
     connect(&tray_, &TrayController::backendCheckRequested, &backend_, &BackendMonitor::checkNow);
@@ -56,8 +56,8 @@ AppController::AppController(QObject *parent)
 void AppController::start()
 {
     history_.load();
-    shortcut_.registerShortcut(config_.shortcut);
-    tray_.updateShortcut(shortcut_.shortcut().isEmpty() ? config_.shortcut : shortcut_.shortcut());
+    shortcut_.registerShortcut(settings_.shortcut);
+    tray_.updateShortcut(shortcut_.shortcut().isEmpty() ? settings_.shortcut : shortcut_.shortcut());
     tray_.updateHistory(history_.recent());
     tray_.updateState(appState_, backendState_);
     tray_.show();
@@ -113,7 +113,7 @@ void AppController::startRecording()
         backend_.checkNow();
         return;
     }
-    if (recorder_.start(nextWavPath(), config_.sampleRate, config_.channels)) {
+    if (recorder_.start(nextWavPath(), settings_.audio.sampleRate, settings_.audio.channels)) {
         recordingTimer_.restart();
         overlay_.showRecording();
         setState(AppState::Recording);
@@ -146,7 +146,7 @@ void AppController::editShortcut()
     dialog.setWindowTitle(QStringLiteral("设置快捷键"));
     auto *layout = new QVBoxLayout(&dialog);
     layout->addWidget(new QLabel(QStringLiteral("设置开始/停止录音的全局快捷键："), &dialog));
-    auto *edit = new QKeySequenceEdit(config_.shortcut, &dialog);
+    auto *edit = new QKeySequenceEdit(settings_.shortcut, &dialog);
     layout->addWidget(edit);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
     layout->addWidget(buttons);
@@ -160,9 +160,9 @@ void AppController::editShortcut()
         QMessageBox::warning(nullptr, QStringLiteral("快捷键失败"), QStringLiteral("无法注册这个全局快捷键，可能已被占用。"));
         return;
     }
-    config_.shortcut = shortcut_.shortcut();
-    saveShortcut(config_.shortcut);
-    tray_.updateShortcut(config_.shortcut);
+    settings_.shortcut = shortcut_.shortcut();
+    saveShortcutSetting(settings_.shortcut);
+    tray_.updateShortcut(settings_.shortcut);
 }
 
 QString AppController::nextWavPath() const
@@ -170,24 +170,4 @@ QString AppController::nextWavPath() const
     const QString base = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + QStringLiteral("/qwen-asr-qt");
     QDir().mkpath(base);
     return base + QStringLiteral("/recording-%1.wav").arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz")));
-}
-
-AsrConfig AppController::loadConfig() const
-{
-    QSettings settings;
-    AsrConfig config;
-    config.endpoint = settings.value(QStringLiteral("endpoint"), config.endpoint).toUrl();
-    config.healthUrl = settings.value(QStringLiteral("healthUrl"), config.healthUrl).toUrl();
-    config.modelsUrl = settings.value(QStringLiteral("modelsUrl"), config.modelsUrl).toUrl();
-    config.model = settings.value(QStringLiteral("model"), config.model).toString();
-    config.language = settings.value(QStringLiteral("language"), config.language).toString();
-    config.prompt = settings.value(QStringLiteral("prompt"), config.prompt).toString();
-    config.shortcut = QKeySequence(settings.value(QStringLiteral("shortcut"), config.shortcut.toString()).toString());
-    return config;
-}
-
-void AppController::saveShortcut(const QKeySequence &shortcut)
-{
-    QSettings settings;
-    settings.setValue(QStringLiteral("shortcut"), shortcut.toString());
 }

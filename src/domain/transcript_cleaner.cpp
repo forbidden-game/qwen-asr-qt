@@ -1,4 +1,4 @@
-#include "transcript_cleaner.h"
+#include "domain/transcript_cleaner.h"
 
 #include <QList>
 #include <QPair>

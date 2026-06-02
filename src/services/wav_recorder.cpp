@@ -1,4 +1,4 @@
-#include "wav_recorder.h"
+#include "services/wav_recorder.h"
 
 #include <QAudioDevice>
 #include <QDataStream>

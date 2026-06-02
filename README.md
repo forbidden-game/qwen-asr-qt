@@ -116,6 +116,6 @@ will be roughly 1 GB larger.
 
 See:
 
-- [Architecture](docs/architecture.md)
+- [Design](docs/design.md)
+- [Development](docs/development.md)
 - [Packaging](docs/packaging.md)
-- [Release Checklist](docs/release-checklist.md)

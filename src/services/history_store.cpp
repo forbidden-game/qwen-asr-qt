@@ -1,4 +1,4 @@
-#include "history_store.h"
+#include "services/history_store.h"
 
 #include <QDir>
 #include <QFile>

@@ -1,5 +1,5 @@
-#include "asr_client.h"
-#include "transcript_cleaner.h"
+#include "services/asr_client.h"
+#include "domain/transcript_cleaner.h"
 
 #include <QFile>
 #include <QHttpMultiPart>
@@ -7,15 +7,15 @@
 #include <QJsonObject>
 #include <QNetworkReply>
 
-AsrClient::AsrClient(AsrConfig config, QObject *parent)
+AsrClient::AsrClient(AppSettings settings, QObject *parent)
     : QObject(parent)
-    , config_(std::move(config))
+    , settings_(std::move(settings))
 {
 }
 
-void AsrClient::setConfig(const AsrConfig &config)
+void AsrClient::setSettings(const AppSettings &settings)
 {
-    config_ = config;
+    settings_ = settings;
 }
 
 void AsrClient::transcribe(const QString &wavPath)
@@ -35,10 +35,10 @@ void AsrClient::transcribe(const QString &wavPath)
         multi->append(part);
     };
 
-    addTextPart("model", config_.model);
+    addTextPart("model", settings_.model.alias);
     addTextPart("response_format", QStringLiteral("json"));
-    addTextPart("language", config_.language);
-    addTextPart("prompt", config_.prompt);
+    addTextPart("language", settings_.transcript.language);
+    addTextPart("prompt", settings_.transcript.prompt);
     addTextPart("temperature", QStringLiteral("0"));
 
     QHttpPart filePart;
@@ -48,7 +48,7 @@ void AsrClient::transcribe(const QString &wavPath)
     file->setParent(multi);
     multi->append(filePart);
 
-    QNetworkRequest request(config_.endpoint);
+    QNetworkRequest request(settings_.backend.transcriptionEndpoint());
     auto *timer = new QElapsedTimer();
     timer->start();
     QNetworkReply *reply = network_.post(request, multi);

@@ -1,4 +1,4 @@
-#include "clipboard_writer.h"
+#include "platform/clipboard_writer.h"
 
 #include <QClipboard>
 #include <QDBusConnection>

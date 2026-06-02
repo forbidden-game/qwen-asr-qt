@@ -1,6 +1,6 @@
-#include "app_controller.h"
-#include "recording_overlay.h"
-#include "transcript_cleaner.h"
+#include "app/app_controller.h"
+#include "domain/transcript_cleaner.h"
+#include "ui/recording_overlay.h"
 
 #include <QApplication>
 #include <QSystemTrayIcon>

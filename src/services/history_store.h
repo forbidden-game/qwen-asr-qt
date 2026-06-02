@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "domain/asr_types.h"
 
 #include <QObject>
 #include <QVector>
