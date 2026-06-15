@@ -10,8 +10,8 @@ QString modelsPath();
 QString expectedHealthStatus();
 QString requiredModelCapability();
 
-QString llamaCppRepository();
-QString llamaCppPinnedCommit();
-QString llamaCppPinnedDescription();
+QString backendExecutableName();
+QString backendRepository();
+QString backendDescription();
 
 } // namespace BackendContract

@@ -27,19 +27,19 @@ QString requiredModelCapability()
     return QStringLiteral("multimodal");
 }
 
-QString llamaCppRepository()
+QString backendExecutableName()
 {
-    return QStringLiteral("ggml-org/llama.cpp");
+    return QStringLiteral("qwen_asr_server");
 }
 
-QString llamaCppPinnedCommit()
+QString backendRepository()
 {
-    return QStringLiteral("60130d18f9ac7f42cb4d7f6060b088a45d8f242e");
+    return QStringLiteral("antirez/qwen-asr");
 }
 
-QString llamaCppPinnedDescription()
+QString backendDescription()
 {
-    return QStringLiteral("b9478");
+    return QStringLiteral("Qwen3-ASR pure C HTTP backend with lazy model loading");
 }
 
 } // namespace BackendContract

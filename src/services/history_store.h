@@ -19,7 +19,10 @@ signals:
     void changed(const QVector<HistoryItem> &items);
 
 private:
+    void appendArchive(const HistoryItem &item) const;
+    void seedArchiveIfMissing() const;
     void save() const;
+    QString archivePath() const;
     QString path() const;
 
     QVector<HistoryItem> items_;

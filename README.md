@@ -1,7 +1,7 @@
 # Qwen ASR Qt
 
 Qwen ASR Qt is a Linux/KDE-first tray app for local speech-to-text with
-Qwen3-ASR through llama.cpp.
+Qwen3-ASR through a lightweight pure-C HTTP backend, `qwen_asr_server`.
 
 Hold `Meta+Space` to record. Release it to transcribe. The cleaned transcript is
 copied to the clipboard through Qt and KDE Klipper, so it works reliably on KDE
@@ -10,23 +10,25 @@ Wayland.
 ## Status
 
 This repository is a developer preview. The app is usable today, but the first
-"open the package and use it" release still needs an integrated backend/model
-manager.
+"open the package and use it" release still needs an integrated model manager.
 
 Current behavior:
 
 - Qt tray app with global shortcut through KDE GlobalAccel.
 - Live recording overlay with microphone-volume waveform.
-- Local HTTP ASR request to llama.cpp `/v1/audio/transcriptions`.
-- Process boundary around llama.cpp: the Qt app does not link llama.cpp.
+- Local HTTP ASR request to `qwen_asr_server` `/v1/audio/transcriptions`.
+- Process boundary around the C backend: the Qt app does not link the inference
+  engine directly.
+- Backend lazy-loads the model on first transcription request and unloads it
+  after 10 minutes idle by default.
 - Transcript cleanup for hesitation fillers and punctuation artifacts.
 - Clipboard write through Qt Clipboard plus KDE Klipper DBus.
 - History persisted under the user's app data directory.
 
 Planned release behavior:
 
-- App starts and supervises a bundled, pinned `llama-server`.
-- App downloads or imports Qwen3-ASR GGUF files on first run.
+- App starts and supervises a bundled, pinned `qwen_asr_server`.
+- App downloads or imports Qwen3-ASR safetensors files on first run.
 - Status panel shows model download, backend startup, model loading, shortcut,
   microphone, and clipboard diagnostics.
 - AppImage release for Linux/KDE.
@@ -39,8 +41,8 @@ Runtime:
 - A microphone supported by Qt Multimedia.
 - KDE GlobalAccel for the global shortcut.
 - KDE Klipper for robust clipboard integration.
-- llama.cpp `llama-server`.
-- Qwen3-ASR GGUF model and mmproj files.
+- `qwen_asr_server` built from the pure-C Qwen3-ASR backend.
+- Qwen3-ASR safetensors model files.
 
 Build:
 
@@ -48,12 +50,18 @@ Build:
 sudo apt install cmake qt6-base-dev qt6-multimedia-dev libkf6globalaccel-dev extra-cmake-modules
 ```
 
+To build the bundled backend from source you also need the C backend's build
+dependencies, including OpenBLAS development headers on Linux.
+
 ## Model Files
 
-The app uses these GGUF files:
+The app uses the original Qwen3-ASR safetensors files:
 
-- `Qwen3-ASR-0.6B-Q8_0.gguf`
-- `mmproj-Qwen3-ASR-0.6B-Q8_0.gguf`
+- `config.json`
+- `generation_config.json`
+- `model.safetensors`
+- `vocab.json`
+- `merges.txt`
 
 Download them with:
 
@@ -64,30 +72,38 @@ scripts/download-models.sh
 By default they are placed under:
 
 ```text
-~/.local/share/qwen-asr-qt/models/ggml-org/Qwen3-ASR-0.6B-GGUF
+~/.local/share/qwen-asr-qt/models/Qwen/Qwen3-ASR-0.6B
 ```
 
 Override with:
 
 ```sh
-MODEL_DIR=/path/to/models scripts/download-models.sh
+MODEL_DIR=/path/to/qwen3-asr-0.6b scripts/download-models.sh
 ```
 
 ## Backend
 
-Start llama.cpp with:
+Start the C backend with:
 
 ```sh
-LLAMA_SERVER=/path/to/llama-server scripts/run-backend.sh
+QWEN_ASR_SERVER=/path/to/qwen_asr_server scripts/run-backend.sh
 ```
 
 Optional overrides:
 
 ```sh
-PORT=18080 MODEL_DIR=/path/to/models THREADS=12 scripts/run-backend.sh
+PORT=18080 MODEL_DIR=/path/to/qwen3-asr-0.6b THREADS=12 IDLE_UNLOAD_SEC=600 scripts/run-backend.sh
 ```
 
 The Qt app expects the backend at `http://127.0.0.1:18080`.
+
+The backend contract is intentionally small:
+
+```text
+GET  /health
+GET  /v1/models
+POST /v1/audio/transcriptions
+```
 
 ## Build And Run
 
@@ -95,6 +111,15 @@ The Qt app expects the backend at `http://127.0.0.1:18080`.
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ./build/qwen-asr-qt
+```
+
+To also build and copy `qwen_asr_server` next to the Qt binary from a local C
+backend checkout:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DQWEN_ASR_BACKEND_SOURCE_DIR=/path/to/qwen-asr
+cmake --build build -j
 ```
 
 Useful smoke checks:
@@ -111,9 +136,9 @@ The public repository keeps source code and scripts only. Model weights and
 private recordings are intentionally ignored.
 
 The first release should ship a lightweight AppImage containing the Qt app and a
-compatible `llama-server` binary. The AppImage should download the GGUF model on
-first run. A separate full/offline artifact can bundle the model later, but it
-will be roughly 1 GB larger.
+compatible `qwen_asr_server` binary. The AppImage should download the
+safetensors model on first run. A separate full/offline artifact can bundle the
+model later, but it will be roughly 2 GB larger.
 
 See:
 

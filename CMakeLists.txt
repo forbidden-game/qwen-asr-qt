@@ -51,4 +51,31 @@ target_link_libraries(qwen-asr-qt PRIVATE
     KF6::GlobalAccel
 )
 
+set(QWEN_ASR_BACKEND_SOURCE_DIR "$ENV{QWEN_ASR_BACKEND_SOURCE_DIR}" CACHE PATH "Path to the qwen-asr C backend source tree")
+if(NOT QWEN_ASR_BACKEND_SOURCE_DIR AND EXISTS "${CMAKE_SOURCE_DIR}/third_party/qwen-asr/Makefile")
+    set(QWEN_ASR_BACKEND_SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/qwen-asr" CACHE PATH "Path to the qwen-asr C backend source tree" FORCE)
+endif()
+
+if(QWEN_ASR_BACKEND_SOURCE_DIR)
+    find_program(MAKE_EXECUTABLE NAMES gmake make REQUIRED)
+    set(QWEN_ASR_BACKEND_BINARY "${QWEN_ASR_BACKEND_SOURCE_DIR}/qwen_asr_server")
+    add_custom_target(qwen-asr-backend
+        COMMAND "${MAKE_EXECUTABLE}" server
+        WORKING_DIRECTORY "${QWEN_ASR_BACKEND_SOURCE_DIR}"
+        COMMENT "Building qwen_asr_server backend"
+        VERBATIM
+    )
+    add_dependencies(qwen-asr-qt qwen-asr-backend)
+    add_custom_command(TARGET qwen-asr-qt POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${QWEN_ASR_BACKEND_BINARY}"
+            "$<TARGET_FILE_DIR:qwen-asr-qt>/qwen_asr_server"
+        COMMENT "Copying qwen_asr_server next to qwen-asr-qt"
+        VERBATIM
+    )
+    install(PROGRAMS "${QWEN_ASR_BACKEND_BINARY}" DESTINATION bin OPTIONAL)
+else()
+    message(STATUS "QWEN_ASR_BACKEND_SOURCE_DIR not set; qwen_asr_server will not be built or bundled")
+endif()
+
 install(TARGETS qwen-asr-qt RUNTIME DESTINATION bin)

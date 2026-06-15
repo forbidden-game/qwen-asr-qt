@@ -26,6 +26,9 @@ AppController::AppController(QObject *parent)
 
     connect(&backend_, &BackendMonitor::backendStateChanged, this, [this](BackendState state) {
         backendState_ = state;
+        if (state == BackendState::Disconnected && backendProcess_.isManaged()) {
+            backendProcess_.start();
+        }
         tray_.updateState(appState_, backendState_);
     });
     connect(&backendProcess_, &BackendProcessManager::errorOccurred, this, [this](const QString &message) {
@@ -91,7 +94,7 @@ void AppController::toggleRecording()
         return;
     }
     if (backendState_ == BackendState::Disconnected || backendState_ == BackendState::ModelMissing) {
-        tray_.notifyError(QStringLiteral("后端未连接或模型未加载"));
+        tray_.notifyError(QStringLiteral("后端未连接或模型不可用"));
         backend_.checkNow();
         return;
     }
@@ -119,7 +122,7 @@ void AppController::startRecording()
         return;
     }
     if (backendState_ == BackendState::Disconnected || backendState_ == BackendState::ModelMissing) {
-        tray_.notifyError(QStringLiteral("后端未连接或模型未加载"));
+        tray_.notifyError(QStringLiteral("后端未连接或模型不可用"));
         backend_.checkNow();
         return;
     }

@@ -2,28 +2,26 @@
 
 #include <QKeySequence>
 #include <QString>
+#include <QStringList>
 #include <QUrl>
 
 struct ModelSpec {
-    QString repo = QStringLiteral("ggml-org/Qwen3-ASR-0.6B-GGUF");
+    QString repo = QStringLiteral("Qwen/Qwen3-ASR-0.6B");
     QString directory;
-    QString modelFile = QStringLiteral("Qwen3-ASR-0.6B-Q8_0.gguf");
-    QString mmprojFile = QStringLiteral("mmproj-Qwen3-ASR-0.6B-Q8_0.gguf");
+    QString modelFile = QStringLiteral("model.safetensors");
     QString alias = QStringLiteral("qwen3-asr");
     QString sha256Model;
-    QString sha256Mmproj;
 
     QString modelPath() const;
-    QString mmprojPath() const;
+    QStringList requiredFiles() const;
 };
 
 struct BackendSpec {
-    QString llamaServerPath = QStringLiteral("llama-server");
+    QString serverPath = QStringLiteral("qwen_asr_server");
     QString host = QStringLiteral("127.0.0.1");
     int port = 18080;
     int threads = 12;
-    int batchThreads = 16;
-    int contextSize = 4096;
+    int idleUnloadSec = 600;
     bool manageProcess = false;
 
     QUrl baseUrl() const;

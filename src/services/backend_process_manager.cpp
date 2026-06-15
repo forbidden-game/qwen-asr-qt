@@ -1,4 +1,5 @@
 #include "services/backend_process_manager.h"
+#include "domain/backend_contract.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -24,7 +25,7 @@ BackendProcessManager::BackendProcessManager(AppSettings settings, QObject *pare
     });
     connect(&process_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         setState(BackendProcessState::Error);
-        emit errorOccurred(QStringLiteral("llama-server 启动失败：%1").arg(static_cast<int>(error)));
+        emit errorOccurred(QStringLiteral("qwen_asr_server 启动失败：%1").arg(static_cast<int>(error)));
     });
     connect(&process_, &QProcess::finished, this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
         if (!settings_.backend.manageProcess) {
@@ -35,7 +36,7 @@ BackendProcessManager::BackendProcessManager(AppSettings settings, QObject *pare
             setState(BackendProcessState::Stopped);
         } else {
             setState(BackendProcessState::Error);
-            emit errorOccurred(QStringLiteral("llama-server 已退出：exit=%1").arg(exitCode));
+            emit errorOccurred(QStringLiteral("qwen_asr_server 已退出：exit=%1").arg(exitCode));
         }
     });
 }
@@ -63,13 +64,20 @@ void BackendProcessManager::start()
     const QString executable = resolveExecutable();
     if (executable.isEmpty()) {
         setState(BackendProcessState::Error);
-        emit errorOccurred(QStringLiteral("找不到固定的 llama-server，请设置 backend/llamaServerPath"));
+        emit errorOccurred(QStringLiteral("找不到 qwen_asr_server，请设置 backend/serverPath 或把后端放到应用目录"));
         return;
     }
 
-    if (!QFileInfo::exists(settings_.model.modelPath()) || !QFileInfo::exists(settings_.model.mmprojPath())) {
+    QStringList missing;
+    const QDir modelDir(settings_.model.directory);
+    for (const QString &file : settings_.model.requiredFiles()) {
+        if (!QFileInfo::exists(modelDir.filePath(file))) {
+            missing.append(file);
+        }
+    }
+    if (!missing.isEmpty()) {
         setState(BackendProcessState::Error);
-        emit errorOccurred(QStringLiteral("缺少 Qwen3-ASR 模型文件，请先下载或导入模型"));
+        emit errorOccurred(QStringLiteral("缺少 Qwen3-ASR safetensors 模型文件：%1").arg(missing.join(QStringLiteral(", "))));
         return;
     }
 
@@ -112,30 +120,28 @@ void BackendProcessManager::setState(BackendProcessState state)
 
 QString BackendProcessManager::resolveExecutable() const
 {
-    const QFileInfo configured(settings_.backend.llamaServerPath);
+    const QFileInfo configured(settings_.backend.serverPath);
     if (configured.isExecutable()) {
         return configured.absoluteFilePath();
     }
 
-    const QString appLocal = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("llama-server"));
+    const QString appLocal = QDir(QCoreApplication::applicationDirPath()).filePath(BackendContract::backendExecutableName());
     if (QFileInfo(appLocal).isExecutable()) {
         return appLocal;
     }
 
-    return QStandardPaths::findExecutable(settings_.backend.llamaServerPath);
+    return QStandardPaths::findExecutable(settings_.backend.serverPath);
 }
 
 QStringList BackendProcessManager::arguments() const
 {
     return {
-        QStringLiteral("-m"), settings_.model.modelPath(),
-        QStringLiteral("--mmproj"), settings_.model.mmprojPath(),
+        QStringLiteral("-d"), settings_.model.directory,
         QStringLiteral("--alias"), settings_.model.alias,
         QStringLiteral("--host"), settings_.backend.host,
         QStringLiteral("--port"), QString::number(settings_.backend.port),
         QStringLiteral("-t"), QString::number(settings_.backend.threads),
-        QStringLiteral("-tb"), QString::number(settings_.backend.batchThreads),
-        QStringLiteral("-c"), QString::number(settings_.backend.contextSize),
+        QStringLiteral("--idle-unload-sec"), QString::number(settings_.backend.idleUnloadSec),
     };
 }
 

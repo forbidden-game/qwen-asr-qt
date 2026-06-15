@@ -7,6 +7,18 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
+To build and bundle the C backend from a local checkout:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DQWEN_ASR_BACKEND_SOURCE_DIR=/home/eipi10/work/oss/qwen-asr
+cmake --build build -j
+```
+
+When `QWEN_ASR_BACKEND_SOURCE_DIR` points at a qwen-asr C backend tree, CMake
+runs `make server` there and copies `qwen_asr_server` next to
+`build/qwen-asr-qt`.
+
 Install smoke test:
 
 ```sh
@@ -21,16 +33,16 @@ Download model files:
 scripts/download-models.sh
 ```
 
-Start llama.cpp:
+Start qwen_asr_server:
 
 ```sh
-LLAMA_SERVER=/path/to/llama-server scripts/run-backend.sh
+QWEN_ASR_SERVER=/path/to/qwen_asr_server scripts/run-backend.sh
 ```
 
 The default app setting is developer mode: `backend/manageProcess=false`. In
-that mode the Qt app never starts llama.cpp; it only monitors and calls the HTTP
-server you started. Packaged releases can flip this setting and point
-`backend/llamaServerPath` at a bundled, pinned `llama-server`.
+that mode the Qt app never starts the backend; it only monitors and calls the
+HTTP server you started. Packaged releases can flip this setting and point
+`backend/serverPath` at a bundled `qwen_asr_server`.
 
 Run the app:
 
@@ -46,10 +58,10 @@ Run the app:
 scripts/doctor.sh
 ```
 
-When using a pre-existing Hugging Face cache:
+When using an existing model checkout/cache:
 
 ```sh
-MODEL_DIR=/path/to/Qwen3-ASR-0.6B-GGUF/snapshot scripts/doctor.sh
+MODEL_DIR=/path/to/qwen3-asr-0.6b scripts/doctor.sh
 ```
 
 ## Release Readiness

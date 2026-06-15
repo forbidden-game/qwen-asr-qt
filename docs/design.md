@@ -77,8 +77,10 @@ Meta+Space released
 - `domain/TranscriptCleaner`: cleans prompt echoes, fillers, and punctuation
   artifacts.
 - `services/WavRecorder`: records WAV files and emits live input levels.
-- `services/AsrClient`: talks to llama.cpp's OpenAI-compatible endpoint.
+- `services/AsrClient`: talks to the local HTTP backend.
 - `services/BackendMonitor`: checks backend health and model capability.
+- `services/BackendProcessManager`: optionally starts a managed
+  `qwen_asr_server` process.
 - `services/HistoryStore`: stores recent transcripts.
 - `platform/GlobalShortcut`: registers the KDE global shortcut.
 - `platform/ClipboardWriter`: writes Qt Clipboard and KDE Klipper.
@@ -87,9 +89,9 @@ Meta+Space released
 
 ## Backend Contract
 
-The app does not link `libllama`, `ggml`, or `mtmd`. It talks to a separate
-`llama-server` process over HTTP. This keeps llama.cpp crashes, upgrades, and
-ABI changes outside the Qt process.
+The app does not link the inference engine into the Qt process. It talks to a
+separate `qwen_asr_server` process over HTTP. This keeps model memory, CPU-heavy
+inference, and backend crashes outside the UI process.
 
 The backend contract is intentionally small:
 
@@ -104,19 +106,19 @@ Defaults:
 ```text
 base URL: http://127.0.0.1:18080
 model:    qwen3-asr
+backend:  qwen_asr_server
 ```
 
-Pinned release metadata:
+Backend lifecycle:
 
-```text
-llama.cpp repo:   ggml-org/llama.cpp
-llama.cpp commit: 60130d18f9ac7f42cb4d7f6060b088a45d8f242e
-local describe:   b9478
-```
+- `GET /health` and `GET /v1/models` do not load the model.
+- The first transcription request lazy-loads the Qwen3-ASR safetensors model.
+- Runtime inference buffers are released after each request.
+- The model is unloaded after 600 seconds of idle time by default.
 
 Developer mode keeps `backend/manageProcess=false`, so the app only monitors an
 already-running server. Release mode sets `backend/manageProcess=true` and
-starts a bundled, pinned `llama-server` executable with `QProcess`.
+starts a bundled `qwen_asr_server` executable with `QProcess`.
 
 ## Next Product Boundary
 
@@ -124,7 +126,8 @@ The public "open and use" release should add:
 
 - robust `BackendProcessManager` UI: logs, version display, and restart after
   crashes.
-- `ModelManager`: detect, download, import, and validate GGUF files.
+- `ModelManager`: detect, download, import, and validate safetensors model
+  files.
 - `SetupPanel`: show missing model, downloading, backend startup, model loading,
   ready, shortcut conflict, microphone error, and clipboard error states.
 

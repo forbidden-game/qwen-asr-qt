@@ -1,9 +1,11 @@
 build/
 dist/
 models/
-third_party/llama.cpp/
 *.AppImage
 *.gguf
+*.safetensors
+*.safetensors.*
+qwen_asr_server
 *.m4a
 *.wav
 test_16k_mono.wav
